@@ -1,6 +1,9 @@
-import { parse } from '@textlint/markdown-to-ast'
-import type { TxtHeaderNode } from '@textlint/ast-node-types'
 import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { parse } from '@textlint/markdown-to-ast'
+import { select, confirm } from '@inquirer/prompts'
+import simpleGit from 'simple-git'
+import { rimrafSync } from 'rimraf'
 
 type ListItem = {
   topicName: string
@@ -11,7 +14,78 @@ type Project = {
   repositoryUrl: string
   description: string
 }
-const list = readmeToList()
+
+run()
+
+async function run () {
+  const list = readmeToList()
+  // console.log(JSON.stringify(list, null, 2))
+  // return
+
+  if (!list.length) {
+    console.log('沒有可以拉取的項目，請更新 readme 以獲取項目拉取選項')
+    return
+  }
+
+  createAnswer(list)
+}
+
+async function createAnswer(list: ListItem[]) {
+  let topicIndex: number
+  let projectRepositoryUrl: string
+
+  try {
+    topicIndex = await select({
+      message: '請選擇主題',
+      choices: list.map((e, i) => ({
+        name: e.topicName,
+        value: i,
+      })),
+    })
+
+    projectRepositoryUrl = await select({
+      message: '請選擇專案',
+      choices: list[topicIndex].projectList.map(e => ({
+        name: e.name,
+        description: e.description,
+        value: e.repositoryUrl,
+      })),
+    })
+  } catch { return }
+
+  const [, repositoryName] = projectRepositoryUrl.match(/([^\/\\]+)\.git$/) || []
+  cloneRepository(projectRepositoryUrl, repositoryName)
+}
+
+async function cloneRepository(repositoryUrl: string, projectName: string) {
+  try {
+    const projectRootDir = path.join(process.cwd(), 'project')
+    const projectDir = path.join(projectRootDir, projectName)
+
+    if (fs.existsSync(projectRootDir)) {
+      if (fs.existsSync(projectDir)) {
+        const isWantDelete = await confirm({
+          message: `已包含該專案(${projectName})目錄，請問是否要刪除並重新克隆呢？`,
+        })
+        if (!isWantDelete) {
+          console.log(`已取消`)
+          return
+        }
+        rimrafSync(projectDir)
+        console.log(`已刪除專案目錄，將為您開始重新克隆`)
+      }
+    } else {
+      fs.mkdirSync(projectRootDir, { recursive: true })
+    }
+
+    const git = simpleGit()
+    console.log(`正在克隆 ${projectName}...`)
+    await git.clone(repositoryUrl, projectDir)
+    console.log(`成功克隆到 ${projectDir}`)
+  } catch (error) {
+    console.error('克隆失敗:', error)
+  }
+}
 
 function readmeToList () {
   const readme = fs.readFileSync('./readme.md', 'utf8')
@@ -67,5 +141,3 @@ function checkValidGithubRepositoryUrl(url: string) {
   const urlPattern = /^https:\/\/github\.com\/[A-z0-9-_\/]+$/;
   return urlPattern.test(url);
 }
-
-console.log(JSON.stringify(list, null, 2))
