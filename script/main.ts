@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename)
 const packageJsonPath = findUpSync('package.json', { cwd: __dirname })
 const projectPath = path.dirname(packageJsonPath)
 const readmeFilepath = path.join(projectPath, 'readme.md')
+const git = simpleGit()
 
 type ListItem = {
   topicName: string
@@ -25,7 +26,7 @@ type Project = {
   description: string
 }
 
-run()
+checkPull().then(run)
 
 async function run () {
   const list = readmeToList()
@@ -38,6 +39,26 @@ async function run () {
   }
 
   createAnswer(list)
+}
+
+async function checkNeedsPull () {
+  try {
+    const status = await git.status()
+    return status.behind > 0;
+  } catch (error) {
+    console.error('檢查 GIT 狀態時發生錯誤:', error)
+  }
+
+  return false
+}
+
+async function checkPull () {
+  const needsPull = await checkNeedsPull()
+  if (needsPull) {
+    console.log('檢測本地版本落後，將 pull 以拉取最新的 readme 配置...')
+    await git.pull()
+    console.log('倉庫已更新，開始運行後續腳本')
+  }
 }
 
 async function createAnswer(list: ListItem[]) {
@@ -88,7 +109,6 @@ async function cloneRepository(repositoryUrl: string, projectName: string) {
       fs.mkdirSync(projectRootDir, { recursive: true })
     }
 
-    const git = simpleGit()
     console.log(`正在克隆 ${projectName}...`)
     await git.clone(repositoryUrl, projectDir)
     console.log(`成功克隆到 ${projectDir}`)
