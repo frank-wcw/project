@@ -1,0 +1,28 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "description": "個人開發倉庫集",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch ./script/main.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frank-wcw/project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/frank-wcw/project/issues"
+  },
+  "homepage": "https://github.com/frank-wcw/project#readme",
+  "dependencies": {
+    "@textlint/markdown-to-ast": "^15.2.1"
+  },
+  "devDependencies": {
+    "@textlint/ast-node-types": "^15.2.1",
+    "@types/node": "^24.1.0",
+    "tsx": "^4.20.3"
+  }
+}
