@@ -1,11 +1,20 @@
 {
-  "name": "project",
-  "version": "1.0.0",
+  "name": "frank-wcw-project_clone",
+  "version": "0.0.0",
   "description": "個人開發倉庫集",
   "type": "module",
+  "bin": {
+    "pjcl": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "script/main.ts",
   "scripts": {
+    "link": "npm link",
     "dev": "tsx watch ./script/main.ts",
-    "start": "tsx ./script/main.ts"
+    "start": "tsx ./script/main.ts",
+    "build": "pkgroll --clean-dist --src \"./script\" --env.NODE_ENV=production"
   },
   "repository": {
     "type": "git",
@@ -21,11 +30,13 @@
   "dependencies": {
     "@inquirer/prompts": "^7.7.1",
     "@textlint/markdown-to-ast": "^15.2.1",
+    "find-up": "^7.0.0",
     "rimraf": "^6.0.1",
     "simple-git": "^3.28.0"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
+    "pkgroll": "^2.14.5",
     "tsx": "^4.20.3"
   }
 }

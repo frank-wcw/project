@@ -1,14 +1,24 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import * as url from 'node:url'
 import { parse } from '@textlint/markdown-to-ast'
 import { select, confirm } from '@inquirer/prompts'
 import simpleGit from 'simple-git'
 import { rimrafSync } from 'rimraf'
+import { findUpSync } from 'find-up'
+
+const NODE_ENV = process.env.NODE_ENV || 'development'
+const __filename = url.fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const packageJsonPath = findUpSync('package.json', { cwd: __dirname })
+const projectPath = path.dirname(packageJsonPath)
+const readmeFilepath = path.join(projectPath, 'readme.md')
 
 type ListItem = {
   topicName: string
   projectList: Project[]
 }
+
 type Project = {
   name: string
   repositoryUrl: string
@@ -59,7 +69,7 @@ async function createAnswer(list: ListItem[]) {
 
 async function cloneRepository(repositoryUrl: string, projectName: string) {
   try {
-    const projectRootDir = path.join(process.cwd(), 'project')
+    const projectRootDir = path.join(projectPath, 'project')
     const projectDir = path.join(projectRootDir, projectName)
 
     if (fs.existsSync(projectRootDir)) {
@@ -88,7 +98,7 @@ async function cloneRepository(repositoryUrl: string, projectName: string) {
 }
 
 function readmeToList () {
-  const readme = fs.readFileSync('./readme.md', 'utf8')
+  const readme = fs.readFileSync(readmeFilepath, 'utf8')
   const AST = parse(readme)
   const list: ListItem[] = []
 
