@@ -33,7 +33,7 @@ async function run () {
   // return
 
   if (!list.length) {
-    console.log('沒有可以拉取的項目，請更新 readme 以獲取項目拉取選項')
+    console.log('沒有可以克隆的項目，請更新 readme 以獲取項目克隆選項')
     return
   }
 
@@ -107,12 +107,7 @@ function readmeToList () {
   AST.children.forEach(e => {
     if (e.type === 'Header') {
       if (e.depth === 2) {
-        const lastListItem = list[list.length - 1]
-        if (lastListItem != null) {
-          if (!lastListItem.projectList.length) {
-            list.splice(list.length - 1, 1)
-          }
-        }
+        checkRemoveEmptyListItem()
 
         current = {
           topicName: e.children[0].raw,
@@ -127,7 +122,6 @@ function readmeToList () {
         const paragraph = f.children[0]
         if (paragraph.type === 'Paragraph') {
           const [link, str] = paragraph.children
-          if (!str) return
           if (link.type === 'Link' && checkValidGithubRepositoryUrl(link.url)) {
             let repositoryUrl = link.url
             if (!/\.git$/.test(repositoryUrl)) {
@@ -136,13 +130,23 @@ function readmeToList () {
             current.projectList.push({
               name: link.children[0].raw,
               repositoryUrl,
-              description: str.raw,
+              description: str?.raw.trim() || '',
             })
           }
         }
       })
     }
   })
+  checkRemoveEmptyListItem()
+
+  function checkRemoveEmptyListItem () {
+    const lastListItem = list[list.length - 1]
+    if (lastListItem != null) {
+      if (!lastListItem.projectList.length) {
+        list.splice(list.length - 1, 1)
+      }
+    }
+  }
 
   return list
 }
