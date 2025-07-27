@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const packageJsonPath = findUpSync('package.json', { cwd: __dirname })
 const projectPath = path.dirname(packageJsonPath)
 const readmeFilepath = path.join(projectPath, 'readme.md')
-const git = simpleGit()
+const git = simpleGit(projectPath)
 
 type ListItem = {
   topicName: string
@@ -43,6 +43,7 @@ async function run () {
 
 async function checkNeedsPullGit () {
   try {
+    await git.remote(['update'])
     const status = await git.status()
     return status.behind > 0;
   } catch (error) {
