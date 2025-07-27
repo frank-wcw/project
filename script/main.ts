@@ -26,7 +26,7 @@ type Project = {
   description: string
 }
 
-checkPull().then(run)
+checkPullGit().then(run)
 
 async function run () {
   const list = readmeToList()
@@ -41,7 +41,7 @@ async function run () {
   createAnswer(list)
 }
 
-async function checkNeedsPull () {
+async function checkNeedsPullGit () {
   try {
     const status = await git.status()
     return status.behind > 0;
@@ -52,8 +52,8 @@ async function checkNeedsPull () {
   return false
 }
 
-async function checkPull () {
-  const needsPull = await checkNeedsPull()
+async function checkPullGit () {
+  const needsPull = await checkNeedsPullGit()
   if (needsPull) {
     console.log('檢測本地版本落後，將 pull 以拉取最新的 readme 配置...')
     await git.pull()
