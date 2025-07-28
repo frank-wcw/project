@@ -1,6 +1,12 @@
 個人專案倉庫集
 ===
 
+<!--PRIVATE_START
+@name:Daike-VSR
+@repositoryUrl:https://github.com/twjw/darke-vsr.git
+@desc:Astro+TS 開發的公司形象網站
+PRIVATE_END-->
+
 ## 插件
 
 - [Adobe XD](https://github.com/frank-wcw/plugin-adobe_xd)

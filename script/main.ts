@@ -142,22 +142,7 @@ function readmeToList () {
       e.children.forEach(f => {
         const paragraph = f.children[0]
         if (paragraph.type === 'Paragraph') {
-          let [link, str, str2] = paragraph.children
-
-          // 如果首值是 [XXX]( 的話表示是未公開倉庫
-          if (link.type === 'Str' && !!str2 && link.raw[0] === '[' && link.raw[link.raw.length - 2] === ']' && link.raw[link.raw.length - 1] === '(') {
-            const tmpStr = link
-            link = str
-            if (link.type === 'Link') {
-              link.url = link.url.substring(0, link.url.length - 1)
-              link.children[0].raw = tmpStr.raw.substring(1, tmpStr.raw.length - 2)
-            }
-            str = str2
-            if (str.type === 'Str') {
-              // 將 ) xxx 變成 xxx
-              str.raw = str.raw.substring(2)
-            }
-          }
+          const [link, str] = paragraph.children
 
           if (link.type === 'Link' && checkValidGithubRepositoryUrl(link.url)) {
             let repositoryUrl = link.url
@@ -172,8 +157,38 @@ function readmeToList () {
           }
         }
       })
+    } else if (e.type === 'Html') {
+      const [, textContent] = e.raw.match(/^<!--PRIVATE_START([\w\W]+)PRIVATE_END-->$/m) || []
+
+      if (textContent) {
+        const listItem: ListItem = {
+          topicName: '*未公開',
+          projectList: [],
+        }
+
+        textContent.split('---').forEach(e => {
+          const result: Partial<Record<'name'|'repositoryUrl'|'desc', string>> = {}
+          const kvList = e.trim().split('\n')
+          kvList.forEach(f => {
+            const [, key, val] = f.match(/^@(\w+):([^\r\n]+)[\r\n]*$/) || []
+            if (key && val) {
+              result[key] = val
+            }
+          })
+          if (result.name && result.repositoryUrl) {
+            listItem.projectList.push({
+              name: result.name,
+              repositoryUrl: result.repositoryUrl,
+              description: result.desc,
+            })
+          }
+        })
+
+        if (listItem.projectList.length > 0) list.push(listItem)
+      }
     }
   })
+
   checkRemoveEmptyListItem()
 
   function checkRemoveEmptyListItem () {
