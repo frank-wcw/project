@@ -24,6 +24,6 @@ PRIVATE_END-->
 
 - [js+ts](https://github.com/frank-wcw/snippet-js) Javascript & Typescript
   - 通用
-    - [auto increment](https://github.com/frank-wcw/snippet-js/common/auto-increment) 自增名字
+    - [auto increment](https://github.com/frank-wcw/snippet-js/blob/main/common/auto-increment/index.ts) 自增名字
   - React
-    - [create provider](https://github.com/frank-wcw/snippet-js/react/react-provider) 類型完備且自動推導的 react context
+    - [create provider](https://github.com/frank-wcw/snippet-js/blob/main/react/react-provider/index.ts) 類型完備且自動推導的 react context
