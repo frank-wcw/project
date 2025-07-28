@@ -142,7 +142,23 @@ function readmeToList () {
       e.children.forEach(f => {
         const paragraph = f.children[0]
         if (paragraph.type === 'Paragraph') {
-          const [link, str] = paragraph.children
+          let [link, str, str2] = paragraph.children
+
+          // 如果首值是 [XXX]( 的話表示是未公開倉庫
+          if (link.type === 'Str' && !!str2 && link.raw[0] === '[' && link.raw[link.raw.length - 2] === ']' && link.raw[link.raw.length - 1] === '(') {
+            const tmpStr = link
+            link = str
+            if (link.type === 'Link') {
+              link.url = link.url.substring(0, link.url.length - 1)
+              link.children[0].raw = tmpStr.raw.substring(1, tmpStr.raw.length - 2)
+            }
+            str = str2
+            if (str.type === 'Str') {
+              // 將 ) xxx 變成 xxx
+              str.raw = str.raw.substring(2)
+            }
+          }
+
           if (link.type === 'Link' && checkValidGithubRepositoryUrl(link.url)) {
             let repositoryUrl = link.url
             if (!/\.git$/.test(repositoryUrl)) {
