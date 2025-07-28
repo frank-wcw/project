@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename)
 const packageJsonPath = findUpSync('package.json', { cwd: __dirname })
 const projectPath = path.dirname(packageJsonPath)
 const readmeFilepath = path.join(projectPath, 'readme.md')
+const projectRootDir = path.join(projectPath, 'project')
 const git = simpleGit(projectPath)
 
 type ListItem = {
@@ -24,6 +25,9 @@ type Project = {
   name: string
   repositoryUrl: string
   description: string
+  projectName: string
+  projectDir: string
+  isLocalExists: boolean
 }
 
 checkPullGit().then(run)
@@ -64,55 +68,51 @@ async function checkPullGit () {
 
 async function createAnswer(list: ListItem[]) {
   let topicIndex: number
-  let projectRepositoryUrl: string
+  let project: Project
 
   try {
     topicIndex = await select({
       message: '請選擇主題',
       choices: list.map((e, i) => ({
-        name: e.topicName,
+        name: `${i + 1}. ${e.topicName}`,
         value: i,
       })),
     })
 
-    projectRepositoryUrl = await select({
+    project = await select({
       message: '請選擇專案',
-      choices: list[topicIndex].projectList.map(e => ({
-        name: e.name,
-        description: e.description,
-        value: e.repositoryUrl,
+      choices: list[topicIndex].projectList.map((e, i) => ({
+        name: `${i + 1}. ${e.name}`,
+        description: `     ${e.description}`,
+        value: e,
       })),
     })
   } catch { return }
 
-  const [, repositoryName] = projectRepositoryUrl.match(/([^\/\\]+)\.git$/) || []
-  cloneRepository(projectRepositoryUrl, repositoryName)
+  cloneRepository(project)
 }
 
-async function cloneRepository(repositoryUrl: string, projectName: string) {
+async function cloneRepository(project: Project) {
   try {
-    const projectRootDir = path.join(projectPath, 'project')
-    const projectDir = path.join(projectRootDir, projectName)
-
     if (fs.existsSync(projectRootDir)) {
-      if (fs.existsSync(projectDir)) {
+      if (fs.existsSync(project.projectDir)) {
         const isWantDelete = await confirm({
-          message: `已包含該專案(${projectName})目錄，請問是否要刪除並重新克隆呢？`,
+          message: `已包含該專案(${project.projectName})目錄，請問是否要刪除並重新克隆呢？`,
         })
         if (!isWantDelete) {
           console.log(`已取消`)
           return
         }
-        rimrafSync(projectDir)
+        rimrafSync(project.projectDir)
         console.log(`已刪除專案目錄，將為您開始重新克隆`)
       }
     } else {
       fs.mkdirSync(projectRootDir, { recursive: true })
     }
 
-    console.log(`正在克隆 ${projectName}...`)
-    await git.clone(repositoryUrl, projectDir)
-    console.log(`成功克隆到 ${projectDir}`)
+    console.log(`正在克隆 ${project.projectName}...`)
+    await git.clone(project.repositoryUrl, project.projectDir)
+    console.log(`成功克隆到 ${project.projectDir}`)
   } catch (error) {
     console.error('克隆失敗:', error)
   }
@@ -149,8 +149,10 @@ function readmeToList () {
             if (!/\.git$/.test(repositoryUrl)) {
               repositoryUrl += '.git'
             }
+
+            const name = link.children[0].raw
             current.projectList.push({
-              name: link.children[0].raw,
+              ...toSpecificProjectKeyValue(name, repositoryUrl),
               repositoryUrl,
               description: str?.raw.trim() || '',
             })
@@ -176,8 +178,9 @@ function readmeToList () {
             }
           })
           if (result.name && result.repositoryUrl) {
+            const name = result.name
             listItem.projectList.push({
-              name: result.name,
+              ...toSpecificProjectKeyValue(name, result.repositoryUrl),
               repositoryUrl: result.repositoryUrl,
               description: result.desc,
             })
@@ -201,6 +204,18 @@ function readmeToList () {
   }
 
   return list
+}
+
+function toSpecificProjectKeyValue (name: string, repositoryUrl: string) {
+  const projectName = (repositoryUrl.match(/([^\/\\]+)\.git$/) || [])[1] || name
+  const projectDir = path.join(projectRootDir, projectName)
+  const isLocalExists = fs.existsSync(projectDir)
+  return {
+    name: `${isLocalExists ? '[EXISTS] ' : ''}${name}`,
+    projectName,
+    projectDir,
+    isLocalExists,
+  }
 }
 
 function checkValidGithubRepositoryUrl(url: string) {
