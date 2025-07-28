@@ -17,3 +17,10 @@ PRIVATE_END-->
 ## 練習
 
 - [threejs](https://github.com/frank-wcw/playground-threejs) 還在摸索 API 中
+
+---
+
+## 代碼片段 (snippets)
+
+- [snippets](https://github.com/frank-wcw/snippet) 片段庫
+  - [ts-auto-increment](https://github.com/frank-wcw/snippet/ts/auto-increment) 自增值
