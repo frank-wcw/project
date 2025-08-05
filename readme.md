@@ -5,6 +5,10 @@
 @name:Daike-VSR
 @repositoryUrl:https://github.com/twjw/darke-vsr.git
 @desc:Astro+TS 開發的公司形象網站
+
+@name:Playground Vite
+@repositoryUrl:https://github.com/frank-wcw/playground-vite.git
+@desc:vite 遊樂園
 PRIVATE_END-->
 
 ## 插件
